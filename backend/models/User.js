@@ -24,6 +24,11 @@ const UserSchema = new mongoose.Schema(
       enum: ["admin", "employee"],
       default: "employee"
     },
+      mustChangePassword: {
+      type: Boolean,
+      default: true
+    },
+
     phone: String,
     address: String
   },

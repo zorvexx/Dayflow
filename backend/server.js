@@ -10,6 +10,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/leaves", require("./routes/leaves"));
 app.use("/api/payroll", require("./routes/payroll"));
+app.use("/api/admin", require("./routes/admin"));
 
 
 

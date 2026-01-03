@@ -2,33 +2,9 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const auth = require("../middleware/auth"); // ✅ FIX
 
 const router = express.Router();
-
-// REGISTER
-router.post("/register", async (req, res) => {
-  try {
-    const { employeeId, name, email, password, role } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      employeeId,
-      name,
-      email,
-      password: hashedPassword,
-      role
-    });
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // LOGIN
 router.post("/login", async (req, res) => {
@@ -54,9 +30,33 @@ router.post("/login", async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        role: user.role
+        role: user.role,
+        mustChangePassword: user.mustChangePassword
       }
     });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CHANGE PASSWORD (FIRST LOGIN)
+router.post("/change-password", auth, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Password too short" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await User.findByIdAndUpdate(req.user.id, {
+      password: hashed,
+      mustChangePassword: false
+    });
+
+    res.json({ message: "Password updated successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
